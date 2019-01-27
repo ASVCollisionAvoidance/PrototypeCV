@@ -15,17 +15,26 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         # get image size
         imgSize = gray.shape
+        imgArea = imgSize[0]*imgSize[1]
 
         # write a function to get info about images (ex. max and min intensity...)
+        print("name: " + name)
+        print("size: " + str(imgSize))
+        print("area: " + str(imgSize[0]*imgSize[1]))
+        print("Max pixel value: " + str(np.amax(gray)))
+        print("Min pixel value: " + str(np.amin(gray)))
+        print("Average pixel value: " + str(np.mean(gray)))
+        print("Standard deviation: " + str(np.std(gray)/255*100) + '%\n')
 
         # MSER
         mser = cv.MSER_create()
-        mser.setMinArea(1000) #100,000
-        mser.setMaxArea(50000) #1,000,000
-        mser.setDelta(25)
+        mser.setMinArea(int(0.001*imgArea)) # 0.1% of image area
+        mser.setMaxArea(int(0.30*imgArea)) # 30% of image area
+        mser.setDelta(15) #25 is best for log picture --> need to find a function to get delta
         regions, boxes = mser.detectRegions(gray)
 
         numRegions = len(regions)
+        print("num regions: " + str(numRegions))
 
         hulls = [cv.convexHull(p.reshape(-1, 1, 2)) for p in regions]
         cv.polylines(gray, hulls, 1, (0, 255, 0), 3)
@@ -53,14 +62,3 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
             print("Mask: ")
             plt.imshow(mask)
             plt.show()
-
-        #vis = pic.copy()
-
-        #for p in regions:
-        #    xmax, ymax = np.amax(p, axis=0)
-        #    xmin, ymin = np.amin(p, axis=0)
-        #    cv.rectangle(vis, (xmin,ymax), (xmax,ymin), (0, 255, 0), 1)
-
-        #print("Rectangles: ")
-        #plt.imshow(vis)
-        #plt.show()
