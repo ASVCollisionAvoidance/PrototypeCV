@@ -6,7 +6,7 @@ import os
 show = 0 # if show = 1: displays figures, if show = 0: suppresses figures
 
 for filename in os.listdir('../PrototypeCV/Inputs'):
-    if filename.endswith(".jpg"):
+    if filename.endswith(".jpg") or filename.endswith(".JPG"):
         name = filename.split(".")[0]
         pic = cv.imread('Inputs/' + filename)
 
@@ -27,10 +27,20 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         print("Standard deviation: " + str(np.std(gray)/255*100) + '%\n')
 
         # MSER
-        mser = cv.MSER_create()
-        mser.setMinArea(int(0.001*imgArea)) # 0.1% of image area
-        mser.setMaxArea(int(0.30*imgArea)) # 30% of image area
-        mser.setDelta(15) #25 is best for log picture --> need to find a function to get delta
+        _delta = 5
+        _min_area = int(0.005*imgArea)
+        _max_area = int(0.1*imgArea)
+        _max_variation = 0.15 # default = 0.25
+        _min_diversity = 0.15 # default = 0.2
+        _max_evolution = 200
+        _area_threshold = 1.01
+        _min_margin = 0.03
+        _edge_blur_size = 5
+
+        mser = cv.MSER_create(_delta, _min_area, _max_area, _max_variation, _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size)
+        #mser.setMinArea(int(0.005*imgArea)) # 0.1% of image area
+        #mser.setMaxArea(int(0.20*imgArea)) # 30% of image area
+        #mser.setDelta(5) #25 is best for log picture --> need to find a function to get delta
         regions, boxes = mser.detectRegions(gray)
 
         numRegions = len(regions)
@@ -49,6 +59,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         cv.imwrite('Outputs/' + name + '-output.jpg', mask_with_image)
         cv.imwrite('Outputs/' + name + '-mask-only.jpg', mask)
+        cv.imwrite('Outputs/' + name + '.jpg', pic)
 
         if show:
             print("Draw Contours")
