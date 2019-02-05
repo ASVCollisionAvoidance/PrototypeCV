@@ -1,8 +1,13 @@
 # Draft Computer Vision Algorithm for ASV project
 * processes a folder of images at a time
-* add JPEG images to 'Inputs' folder to process new images
+* detects horizon
+* detects objects in water
 
-## MSER
+## Important Steps after cloning repo:
+1. Create two new folders titled 'Inputs' and 'Outputs', respectively.
+2. Add images to be processed into the Inputs folder.
+
+### MSER
 Uses MSER (Maximally Stable Extremal Regions) algorithm to detect Regions of Interest within image.
 
 #### Important Parameters:
@@ -14,3 +19,7 @@ Uses MSER (Maximally Stable Extremal Regions) algorithm to detect Regions of Int
 
 **delta**: maximum variation from one blob to the next
 * current set at delta = 12 (needs to be adjusted)
+
+### Horizon Detection
+* uses Canny Edge Detection and Hough Line Transform to find the horizon in each image
+* segments the image based on the horizon line
