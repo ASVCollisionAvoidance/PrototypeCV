@@ -42,7 +42,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         #plt.show()
 
         b_with_image = cv.bitwise_and(pic2, pic2, mask=threshB)
-        #plt.imshow(binary_with_image)
+        #plt.imshow(b_with_image)
         #plt.show()
 
 
@@ -57,7 +57,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         # find contours with binary image
         imCopy = pic2.copy()
-        contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+        contours, hierarchy = cv.findContours(threshB, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
         cv.drawContours(imCopy, contours, -1, (0,255,0), 3)
         #plt.imshow(imCopy)
         #plt.show()
@@ -99,13 +99,13 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         p2x = 3648
         p2y = int(m*p2x + b)
         cv.line(horizon,(p1x,p1y), (p2x,p2y), (255,0,0), 12)
-        #plt.imshow(vis)
+        #plt.imshow(horizon)
         #plt.show()
 
         # MSER
-        _delta = 1
-        _min_area = int(0.0001*imgArea)
-        _max_area = int(0.1*imgArea)
+        _delta = 5
+        _min_area = int(0.001*imgArea)
+        _max_area = int(0.05*imgArea)
         _max_variation = 0.5 # default = 0.25
         _min_diversity = 0.2 # default = 0.2
         _max_evolution = 200
@@ -132,9 +132,9 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         cv.imwrite('Outputs/' + name + '-output.jpg', mask_with_image)
         cv.imwrite('Outputs/' + name + '-mask-only.jpg', mask)
         cv.imwrite('Outputs/' + name + '.jpg', pic)
-        cv.imwrite('Outputs/' + name + '-thresh.jpg', binary_with_image)
+        cv.imwrite('Outputs/' + name + '-thresh.jpg', b_with_image)
         cv.imwrite('Outputs/' + name + '-threshVal.jpg', val_w_image)
-        cv.imwrite('Outputs_horizon/' + name + '-horizon.jpg', vis)
+        cv.imwrite('Outputs_horizon/' + name + '-horizon.jpg', horizon)
 
         if show:
             print("Original")
