@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 from horizon import detect_horizon
 
-show = 0 # if show = 1: displays figures, if show = 0: suppresses figures
+show = 1 # if show = 1: displays figures, if show = 0: suppresses figures
 
 for filename in os.listdir('../PrototypeCV/Inputs'):
     if filename.endswith(".jpg") or filename.endswith(".JPG"):
@@ -65,6 +65,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         # find horizon
         horizon = detect_horizon(pic)
+        gray = cv.cvtColor(horizon,cv.COLOR_BGR2GRAY)
         plt.imshow(horizon)
         plt.show()
 
