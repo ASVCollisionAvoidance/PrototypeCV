@@ -5,7 +5,8 @@ import os
 from horizon import detect_horizon
 from mser import detect_MSERregions
 
-show = 1 # if show = 1: displays figures, if show = 0: suppresses figures
+show = 0 # if show = 1: displays figures, if show = 0: suppresses figures
+save = 0 # if save = 1: saves output images to Outputs folder
 
 # returns the connected components and a mask from the MSER regions
 def getCC(regions, gray):
@@ -20,108 +21,55 @@ def getCC(regions, gray):
 
     retval, labels = cv.connectedComponents(mask)
 
-    return (labels, mask)
+    return (retval, labels, mask)
 
 
 for filename in os.listdir('../PrototypeCV/Inputs'):
     if filename.endswith(".jpg") or filename.endswith(".JPG"):
+        # read image file
         name = filename.split(".")[0]
         pic = cv.imread('Inputs/' + filename)
+        print("name: " + name + "\n")
 
         # convert to grayscale image
         gray = cv.cvtColor(pic,cv.COLOR_BGR2GRAY)
-        #plt.imshow(gray)
-        #plt.show()
-
-        # convert to lab colour space
-        lab = cv.cvtColor(pic, cv.COLOR_BGR2LAB)
-        l,a,b = cv.split(lab)
-        aveB = np.mean(b) # the b* channel shows high contrast for the surfboard
-        stdB = np.std(b)
-
-        # convert to hsv colour space
-        hsv = cv.cvtColor(pic, cv.COLOR_BGR2HSV)
-        h,s,v = cv.split(hsv)
-        aveH = np.mean(h)
-        aveV = np.mean(v)
-
-        # get image size
-        imgSize = gray.shape
-        imgArea = imgSize[0]*imgSize[1]
-        aveGray = np.mean(gray)
-
-        print("name: " + name + "\n")
-
-        # Thresholding an image based on b* channel of LAB colour space
-        ret, threshB = cv.threshold(b,aveB + 1.75*stdB,255,0)
-        #plt.imshow(thresh)
-        #plt.show()
-
-        b_with_image = cv.bitwise_and(pic, pic, mask=threshB)
-        #plt.imshow(b_with_image)
-        #plt.show()
-
-
-        # Thresholding an image based on the Value channel of HSV colour space
-        ret, threshVal = cv.threshold(v,aveV,255,0)
-        #plt.imshow(threshVal)
-        #plt.show()
-
-        val_w_image = cv.bitwise_and(pic, pic, mask=threshVal)
-        #plt.imshow(val_w_image)
-        #plt.show()
-
-        # find contours with binary image
-        imCopy = pic.copy()
-        contours, hierarchy = cv.findContours(threshB, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-        cv.drawContours(imCopy, contours, -1, (0,255,0), 3)
-        #plt.imshow(imCopy)
-        #plt.show()
+        plt.imshow(gray)
+        plt.show()
 
         # find horizon
         horizon = detect_horizon(pic)
         gray = cv.cvtColor(horizon,cv.COLOR_BGR2GRAY)
-        plt.imshow(horizon)
-        plt.show()
 
+        # detect regions of interest with MSER (maximally stable extremal regions) feature detector
         regions = detect_MSERregions(gray)
 
-        labels, mask = getCC(regions, gray)
-        print(labels)
+        # get the connected components from the MSER regions
+        retval, labels, mask = getCC(regions, gray)
 
-        print("\nnum connected components: " + str(int(len(labels))) + "\n")
+        # calculate stats on the connected components
+        sample = np.uint8(labels)
+        data = [[0, 0, 0] for _ in range(int(retval)-1)]
 
-        label_hue = np.uint8(179*labels/np.max(labels))
-        blank_ch = 255*np.ones_like(label_hue)
-        labeled_img = cv.merge([label_hue, blank_ch, blank_ch])
+        for i in range(1,int(retval)):
+            indices = np.where(sample == i)
+            coordinates = list(zip(indices[0], indices[1]))
+            pixels = np.asarray(coordinates)
 
-        labeled_img = cv.cvtColor(labeled_img, cv.COLOR_HSV2BGR)
+            data[i-1][0] = np.mean(pic[pixels])
 
-        labeled_img[label_hue==0] = 0
+        if save:
+            mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
 
-        plt.imshow(labeled_img)
-        plt.show()
-
-        #for i in range(1,int(retval)):
-        #    continue
-
-
-        mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
-
-        cv.imwrite('Outputs/' + name + '-output.jpg', mask_with_image)
-        cv.imwrite('Outputs/' + name + '-mask-only.jpg', mask)
-        cv.imwrite('Outputs/' + name + '.jpg', pic)
-        cv.imwrite('Outputs/' + name + '-thresh.jpg', b_with_image)
-        cv.imwrite('Outputs/' + name + '-threshVal.jpg', val_w_image)
-        cv.imwrite('Outputs_horizon/' + name + '-horizon.jpg', horizon)
+            cv.imwrite('Outputs/' + name + '-output.jpg', mask_with_image)
+            cv.imwrite('Outputs/' + name + '-mask-only.jpg', mask)
+            cv.imwrite('Outputs/' + name + '.jpg', pic)
+            cv.imwrite('Outputs_horizon/' + name + '-horizon.jpg', horizon)
 
         if show:
+            mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
+
             print("Original")
             plt.imshow(pic)
-            plt.show()
-
-            print("Draw Contours")
-            plt.imshow(gray)
             plt.show()
 
             print("Mask with Image: ")
