@@ -3,15 +3,30 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import os
 from horizon import detect_horizon
+from mser import detect_MSERregions
 
 show = 1 # if show = 1: displays figures, if show = 0: suppresses figures
+
+# returns the connected components and a mask from the MSER regions
+def getCC(regions, gray):
+    hulls = [cv.convexHull(p.reshape(-1, 1, 2)) for p in regions]
+    cv.polylines(gray, hulls, 1, (0, 255, 0), 3)
+
+    mask = np.zeros((gray.shape[0], gray.shape[1], 1), dtype=np.uint8)
+    mask = cv.dilate(mask, np.ones((150, 150), np.uint8))
+
+    for contour in hulls:
+        cv.drawContours(mask, [contour], -1, (255, 255, 255), -1)
+
+    retval, labels = cv.connectedComponents(mask)
+
+    return (labels, mask)
+
 
 for filename in os.listdir('../PrototypeCV/Inputs'):
     if filename.endswith(".jpg") or filename.endswith(".JPG"):
         name = filename.split(".")[0]
         pic = cv.imread('Inputs/' + filename)
-        b,g,r = cv.split(pic)
-        pic2 = cv.merge([r,g,b])
 
         # convert to grayscale image
         gray = cv.cvtColor(pic,cv.COLOR_BGR2GRAY)
@@ -42,7 +57,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         #plt.imshow(thresh)
         #plt.show()
 
-        b_with_image = cv.bitwise_and(pic2, pic2, mask=threshB)
+        b_with_image = cv.bitwise_and(pic, pic, mask=threshB)
         #plt.imshow(b_with_image)
         #plt.show()
 
@@ -52,7 +67,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         #plt.imshow(threshVal)
         #plt.show()
 
-        val_w_image = cv.bitwise_and(pic2, pic2, mask=threshVal)
+        val_w_image = cv.bitwise_and(pic, pic, mask=threshVal)
         #plt.imshow(val_w_image)
         #plt.show()
 
@@ -69,30 +84,27 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         plt.imshow(horizon)
         plt.show()
 
-        # MSER
-        _delta = 5
-        _min_area = int(0.001*imgArea)
-        _max_area = int(0.05*imgArea)
-        _max_variation = 0.5 # default = 0.25
-        _min_diversity = 0.2 # default = 0.2
-        _max_evolution = 200
-        _area_threshold = 1.01
-        _min_margin = 0.03
-        _edge_blur_size = 5
+        regions = detect_MSERregions(gray)
 
-        mser = cv.MSER_create(_delta, _min_area, _max_area, _max_variation, _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size)
-        regions, boxes = mser.detectRegions(gray)
+        labels, mask = getCC(regions, gray)
+        print(labels)
 
-        numRegions = len(regions)
+        print("\nnum connected components: " + str(int(len(labels))) + "\n")
 
-        hulls = [cv.convexHull(p.reshape(-1, 1, 2)) for p in regions]
-        cv.polylines(gray, hulls, 1, (0, 255, 0), 3)
+        label_hue = np.uint8(179*labels/np.max(labels))
+        blank_ch = 255*np.ones_like(label_hue)
+        labeled_img = cv.merge([label_hue, blank_ch, blank_ch])
 
-        mask = np.zeros((imgSize[0], imgSize[1], 1), dtype=np.uint8)
-        mask = cv.dilate(mask, np.ones((150, 150), np.uint8))
+        labeled_img = cv.cvtColor(labeled_img, cv.COLOR_HSV2BGR)
 
-        for contour in hulls:
-            cv.drawContours(mask, [contour], -1, (255, 255, 255), -1)
+        labeled_img[label_hue==0] = 0
+
+        plt.imshow(labeled_img)
+        plt.show()
+
+        #for i in range(1,int(retval)):
+        #    continue
+
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
 
@@ -105,7 +117,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         if show:
             print("Original")
-            plt.imshow(pic2)
+            plt.imshow(pic)
             plt.show()
 
             print("Draw Contours")
