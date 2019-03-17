@@ -1,7 +1,5 @@
-import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
-import os
 
 def detect_MSERregions(pic):
     imgArea = pic.shape[0]*pic.shape[1]

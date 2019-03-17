@@ -43,7 +43,6 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         # detect regions of interest with MSER (maximally stable extremal regions) feature detector
         regions = detect_MSERregions(gray)
-        print("num of MSER regions: " + str(len(regions)))
 
         # get the connected components from the MSER regions
         retval, labels, mask = getCC(regions, gray)
@@ -52,49 +51,8 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         plt.imshow(mask_with_image)
         plt.show()
 
-        print("num of CC: " + str(int(retval-1)))
-
-        # calculate stats on the connected components
-        sample = np.uint8(labels)
-        print("sample shape: " + str(sample.shape) + "\n")
-        print("labels image size: " + str(labels.shape[0]) + " x " + str(labels.shape[1]))
-        data = [[0, 0, 0] for _ in range(int(retval)-1)]
-
-        print("program isn't frozen yet\nretval: " + str(retval))
-
-        for i in range(int(retval)-1):
-            indices = np.where(sample == i+1)
-            coordinates = list(zip(indices[0], indices[1]))
-            pixels = np.asarray(coordinates)
-            print("i: " + str(i))
-
-            print("num coordinates: " + str(len(indices[0])))
-            if(len(pixels) > 0):
-                print("max pixel coordinate: " + str(max(indices[0])) + ", " + str(max(indices[1])))
-                data[i][0] = np.mean(pic[indices[0], indices[1]])
-
-        data = np.asarray(data)
-        averages = np.float32(data[:,0])
-
-        # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
-        criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-
-        # Set flags (Just to avoid line break in the code)
-        flags = cv.KMEANS_RANDOM_CENTERS
-
-        # Apply KMeans
-        compactness,labels_kmeans,centers = cv.kmeans(averages,2,None,criteria,10,flags)
-        print(labels_kmeans)
-
-        for i in range(int(retval)-1):
-            if(labels_kmeans[i][0] == 1):
-                print(labels_kmeans[i][0])
-                indices = np.where(sample == i+1)
-                coordinates = list(zip(indices[0], indices[1]))
-                pixels = np.asarray(coordinates)
-
-                if(len(pixels) > 0):
-                    mask[indices[0], indices[1]] = 0
+        # classify the detected ROI as 'Objects to Avoid' vs. other
+        mask, labels_kmeans = classifyROI(labels, mask, pic)
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
         plt.imshow(mask_with_image)
