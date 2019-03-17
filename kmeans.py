@@ -3,7 +3,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import os
 
-def classifyROI(labels, mask, pic):
+def classifyROI(retval, labels, mask, pic):
     # calculate stats on the connected components
     sample = np.uint8(labels)
     data = [[0, 0, 0] for _ in range(int(retval)-1)]

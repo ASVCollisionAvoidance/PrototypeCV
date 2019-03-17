@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 from horizon import detect_horizon
 from mser import detect_MSERregions
+from kmeans import classifyROI
 
 show = 0 # if show = 1: displays figures, if show = 0: suppresses figures
 save = 0 # if save = 1: saves output images to Outputs folder
@@ -52,7 +53,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         plt.show()
 
         # classify the detected ROI as 'Objects to Avoid' vs. other
-        mask, labels_kmeans = classifyROI(labels, mask, pic)
+        mask, labels_kmeans = classifyROI(retval, labels, mask, pic)
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
         plt.imshow(mask_with_image)
