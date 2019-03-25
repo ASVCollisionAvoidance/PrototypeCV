@@ -49,15 +49,15 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         retval, labels, mask = getCC(regions, gray)
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
-        plt.imshow(mask_with_image)
-        plt.show()
+        #plt.imshow(mask_with_image)
+        #plt.show()
 
         # classify the detected ROI as 'Objects to Avoid' vs. other
         mask, labels_kmeans = classifyROI(retval, labels, mask, pic)
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
-        plt.imshow(mask_with_image)
-        plt.show()
+        #plt.imshow(mask_with_image)
+        #plt.show()
 
         if save:
             mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
