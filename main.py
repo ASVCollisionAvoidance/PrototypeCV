@@ -61,13 +61,15 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         #plt.imshow(mserRegions)
         #plt.show()
 
+        pitch = 1 # SUSCRIBE TO AHRS.PY from Adrien's code
+
         # classify the detected ROI as 'Objects to Avoid' vs. other
         if(int(retval) > 2):
-            averageY, mask, labels_kmeans = classifyROI(retval, labels, mask, pic)
-            print("\n\nAverageY!")
-            print(averageY)
+            averageXY, mask, labels_kmeans = classifyROI(retval, labels, mask, pic)
+            print("\n\nAverageXY!")
+            print(averageXY)
 
-            distanceList = findDistances(averageY)
+            distanceList = findDistances(averageXY, pitch)
             print("\nDistance List!")
             print(distanceList)
         else:

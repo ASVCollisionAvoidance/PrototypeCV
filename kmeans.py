@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def classifyROI(retval, labels, mask, pic):
     # calculate stats on the connected components
     sample = np.uint8(labels)
-    averageY = [0 for _ in range(int(retval) -1)]
+    averageXY = [(0,0) for _ in range(int(retval) -1)]
     data = [[0, 0, 0] for _ in range(int(retval)-1)]
 
     for i in range(int(retval)-1):
@@ -14,7 +14,7 @@ def classifyROI(retval, labels, mask, pic):
         if(len(indices) > 0):
             data[i][0] = np.mean(pic[indices[0], indices[1]])
             data[i][1] = int(np.mean(indices[0]))
-            averageY[i] = int(np.mean(indices[0]))
+            averageXY[i] = (int(np.mean(indices[1])), int(np.mean(indices[0])))
 
 
     data = np.asarray(data)
@@ -38,4 +38,4 @@ def classifyROI(retval, labels, mask, pic):
             if(len(indices) > 0):
                 mask[indices[0], indices[1]] = 0
 
-    return (averageY, mask, labels_kmeans)
+    return (averageXY, mask, labels_kmeans)
