@@ -39,11 +39,12 @@ def detect_horizon(pic):
     horizon = pic.copy()
     p1x = 0
     p1y = int(b)
-    p2x = 3648
+    p2x = horizon.shape[1]
     p2y = int(m*p2x + b)
     cv.line(horizon,(p1x,p1y), (p2x,p2y), (255,0,0), 15)
 
-    vertices = np.array([[(p1x,p1y), (p2x,p2y), (3648,0), (0,0)]], dtype=np.int32)
-    cv.fillConvexPoly(pic,vertices,(0,0,0))
+    imCopy = pic.copy()
+    vertices = np.array([[(p1x,p1y), (p2x,p2y), (horizon.shape[1],0), (0,0)]], dtype=np.int32)
+    cv.fillConvexPoly(imCopy,vertices,(0,0,0))
 
-    return pic.copy()
+    return imCopy
