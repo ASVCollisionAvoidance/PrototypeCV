@@ -16,7 +16,7 @@ def detect_horizon(pic):
 
     Returns
     -------
-    numpy N-dimensional array
+    imCopy: numpy N-dimensional array
         a copy of the input image with all of the
         pixels above the horizon line converted to black
     """

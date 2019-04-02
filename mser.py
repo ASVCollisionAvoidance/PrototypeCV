@@ -2,6 +2,28 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 def detect_MSERregions(pic):
+    """
+    MSER: maximally stable extremal regions
+
+    Used to detect obstacles in the input images.
+
+    MSER feature detection is an algorithm for blob detection. It works by creating a series of binary images,
+    each with an increasing threshold value. Maximally stable extremal regions are regions in the image that
+    remain stable over a range of thresholds. The main parameter is delta, which is the difference betweeen
+    successive threhsold values.
+
+    Parameters
+    ----------
+    pic: numpy N-dimensional array
+        input image with pixels above the horizon removed and pixels below the
+        tip of the surfboard removed
+
+    Returns
+    -------
+    regions: list
+        a list of arrays in which each array contains all of the pixel coordinates
+        of the detected regions
+    """
     imgArea = pic.shape[0]*pic.shape[1]
 
     # MSER
