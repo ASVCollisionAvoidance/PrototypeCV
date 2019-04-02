@@ -3,6 +3,24 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 def detect_horizon(pic):
+    """
+    Detects and removes the area above the horizon in each input photo.
+
+    Uses Canny edge detection to find the edges in the photo and then Hough
+    line transform to find the straight line formed by the horizon.
+
+    Parameters
+    ----------
+    pic: numpy N-dimensional array
+        input picture in which to detect horizon
+
+    Returns
+    -------
+    numpy N-dimensional array
+        a copy of the input image with all of the
+        pixels above the horizon line converted to black
+    """
+
     # convert to grayscale
     gray = cv.cvtColor(pic,cv.COLOR_BGR2GRAY)
 

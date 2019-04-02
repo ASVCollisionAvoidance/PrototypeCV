@@ -34,6 +34,7 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         pic = cv.imread('Inputs/' + filename)
         print("name: " + name + "\n")
         print("image size: " + str(pic.shape[0]) + " x " + str(pic.shape[1]))
+        print("type: " + str(type(pic)))
 
         # display original image (remove this part when done project)
         plt.imshow(pic)
@@ -42,11 +43,13 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         # find horizon
         horizon = detect_horizon(pic)
+        cv.imwrite('Outputs/' + name + '-horizon.jpg', horizon)
         #plt.imshow(horizon)
         #plt.show()
 
         # remove part of picture below/beside board
         noBoard = removeBoard(horizon)
+        cv.imwrite('Outputs/' + name + '-noboard.jpg', noBoard)
         gray = cv.cvtColor(noBoard,cv.COLOR_BGR2GRAY)
         #plt.imshow(noBoard)
         #plt.show()

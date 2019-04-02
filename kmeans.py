@@ -14,7 +14,7 @@ def classifyROI(retval, labels, mask, pic):
         if(len(indices) > 0):
             data[i][0] = np.mean(pic[indices[0], indices[1]])
             data[i][1] = int(np.mean(indices[0]))
-            averageXY[i] = (int(np.mean(indices[1])), int(np.mean(indices[0])))
+            averageXY[i] = (int(np.mean(indices[1])), int(pic.shape[0] - np.mean(indices[0])))
 
 
     data = np.asarray(data)
