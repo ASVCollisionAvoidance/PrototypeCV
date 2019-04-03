@@ -8,7 +8,10 @@ from kmeans import classifyROI
 from board import removeBoard
 from distance import findDistances
 
+show = 0 # if show = 1: displays figures, if show = 0: suppresses figures
+save = 0 # if save = 1: saves output images to Outputs folder
 
+# returns the connected components and a mask from the MSER regions
 def getCC(regions, gray):
     """
     When detecting regions of interest using MSER feature detector,
@@ -54,58 +57,6 @@ def getCC(regions, gray):
     return (retval, labels, mask)
 
 
-def processImage(pic, pitch):
-    """
-    Entire obstacle detection algorithm.
-
-    Takes the image input and calls the various functions necessary to
-    detect the obstacles within the image. Then, calculates the distances
-    to each of the detected obstacles and outputs these distances in a list.
-
-    Parameters
-    ----------
-    pic: numpy N-dimensional array
-        input image as taken by camera
-
-    pitch: float
-        pitch angle of surfboard, this angle impacts the perceived distance
-        to an obstacle
-
-    Returns
-    -------
-    distanceList: list
-        a list of (x, y) tuples that represent the average
-        distances in cm of each detected object
-
-    mask: numpy N-dimensional array
-        a binary image only containing the regions classified
-        as an obstacle
-    """
-    # find horizon
-    horizon = detect_horizon(pic)
-
-    # remove part of picture below/beside board
-    noBoard = removeBoard(horizon)
-    gray = cv.cvtColor(noBoard,cv.COLOR_BGR2GRAY)
-
-    # detect regions of interest with MSER (maximally stable extremal regions) feature detector
-    regions = detect_MSERregions(gray)
-
-    # get the connected components from the MSER regions
-    retval, labels, mask = getCC(regions, gray)
-
-    mserRegions = cv.bitwise_and(pic, pic, mask=mask)
-
-    # classify the detected ROI as 'Objects to Avoid' vs. other
-    if(int(retval) > 2):
-        averageXY, mask = classifyROI(retval, labels, mask, pic)
-        distanceList = findDistances(averageXY, pitch)
-    else:
-        distanceList = []
-
-    return (distanceList, mask)
-
-
 for filename in os.listdir('../PrototypeCV/Inputs'):
     if filename.endswith(".jpg") or filename.endswith(".JPG"):
         # read image file
@@ -118,8 +69,56 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
         plt.imshow(pic)
         plt.show()
 
+        # find horizon
+        horizon = detect_horizon(pic)
+        #plt.imshow(horizon)
+        #plt.show()
+
+        # remove part of picture below/beside board
+        noBoard = removeBoard(horizon)
+        gray = cv.cvtColor(noBoard,cv.COLOR_BGR2GRAY)
+        #plt.imshow(noBoard)
+        #plt.show()
+
+        # detect regions of interest with MSER (maximally stable extremal regions) feature detector
+        regions = detect_MSERregions(gray)
+
+        # get the connected components from the MSER regions
+        retval, labels, mask = getCC(regions, gray)
+
+        mserRegions = cv.bitwise_and(pic, pic, mask=mask)
+        #plt.imshow(mserRegions)
+        #plt.show()
+
         pitch = 1 # SUSCRIBE TO AHRS.PY from Adrien's code
 
-        distanceList, mask = processImage(pic, pitch)
+        # classify the detected ROI as 'Objects to Avoid' vs. other
+        if(int(retval) > 2):
+            averageXY, mask = classifyROI(retval, labels, mask, pic)
+            distanceList = findDistances(averageXY, pitch)
+        else:
+            distanceList = []
 
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
+        #plt.imshow(mask_with_image)
+        #plt.show()
+
+        if save:
+            cv.imwrite('Outputs/' + name + '-output.jpg', mask_with_image)
+            cv.imwrite('Outputs/' + name + '-mask-only.jpg', mask)
+            cv.imwrite('Outputs/' + name + '.jpg', pic)
+            cv.imwrite('Outputs_horizon/' + name + '-horizon.jpg', horizon)
+            cv.imwrite('Outputs/' + name + '-mser.jpg', mserRegions)
+
+        if show:
+            print("Original")
+            plt.imshow(pic)
+            plt.show()
+
+            print("Mask with Image: ")
+            plt.imshow(mask_with_image)
+            plt.show()
+
+            print("Mask: ")
+            plt.imshow(mask)
+            plt.show()
