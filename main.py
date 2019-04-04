@@ -94,10 +94,13 @@ def processImage(pic, pitch):
     # get the connected components from the MSER regions
     retval, labels, mask = getCC(regions, gray)
 
+    print("\nretval: ")
+    print(retval)
+
     mserRegions = cv.bitwise_and(pic, pic, mask=mask)
 
     # classify the detected ROI as 'Objects to Avoid' vs. other
-    if(int(retval) > 2):
+    if(int(retval) >= 2):
         averageXY, mask = classifyROI(retval, labels, mask, pic)
         distanceList = findDistances(averageXY, pitch)
     else:
@@ -122,4 +125,9 @@ for filename in os.listdir('../PrototypeCV/Inputs'):
 
         distanceList, mask = processImage(pic, pitch)
 
+        print("\nDistance List:")
+        print(distanceList)
+
         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
+        plt.imshow(mask_with_image)
+        plt.show()

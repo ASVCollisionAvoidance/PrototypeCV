@@ -34,37 +34,57 @@ def classifyROI(retval, labels, mask, pic):
         a binary image only containing the regions classified by k-means clustering
         as an obstacle
     """
-    # calculate stats on the connected components
-    sample = np.uint8(labels)
-    averageXY = [(0,0) for _ in range(int(retval) -1)]
-    data = [[0, 0, 0] for _ in range(int(retval)-1)]
-
-    for i in range(int(retval)-1):
-        indices = np.where(sample == i+1)
+    if retval == 2:
+        sample = np.uint8(labels)
+        indices = np.where(sample == 1)
 
         if(len(indices) > 0):
-            data[i][0] = np.mean(pic[indices[0], indices[1]])
-            data[i][1] = int(np.mean(indices[0]))
-            averageXY[i] = (int(np.mean(indices[1])), int(pic.shape[0] - np.mean(indices[0])))
+            averageXY = [(int(np.mean(indices[1])), int(1950 - np.mean(indices[0])))]
 
+    else:
+        # calculate stats on the connected components
+        sample = np.uint8(labels)
+        data = [[0, 0, 0] for _ in range(int(retval)-1)]
 
-    data = np.asarray(data)
-    averages = np.float32(data[:,0])
-
-    # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
-    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-
-    # Set flags (Just to avoid line break in the code)
-    flags = cv.KMEANS_RANDOM_CENTERS
-
-    # Apply KMeans
-    compactness,labels_kmeans,centers = cv.kmeans(averages,2,None,criteria,10,flags)
-
-    for i in range(int(retval)-1):
-        if(labels_kmeans[i][0] == 1):
+        for i in range(int(retval)-1):
             indices = np.where(sample == i+1)
 
             if(len(indices) > 0):
-                mask[indices[0], indices[1]] = 0
+                data[i][0] = np.mean(pic[indices[0], indices[1]])
+                data[i][1] = int(np.mean(indices[0]))
+                #averageXY[i] = (int(np.mean(indices[1])), int(1950 - np.mean(indices[0])))
+
+
+        data = np.asarray(data)
+        averages = np.float32(data[:,0])
+
+        # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
+        criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+
+        # Set flags (Just to avoid line break in the code)
+        flags = cv.KMEANS_RANDOM_CENTERS
+
+        # Apply KMeans
+        compactness,labels_kmeans,centers = cv.kmeans(averages,2,None,criteria,10,flags)
+
+        averageXY = [(0,0) for _ in range(np.count_nonzero(labels_kmeans))]
+
+        print(labels_kmeans)
+
+        count = 0
+        for i in range(int(retval)-1):
+
+            if(labels_kmeans[i][0] == 0):
+                indices = np.where(sample == i+1)
+
+                if(len(indices) > 0):
+                    mask[indices[0], indices[1]] = 0
+
+            else:
+                indices = np.where(sample == i+1)
+
+                if(len(indices) > 0):
+                    averageXY[count] = (int(np.mean(indices[1])), int(1950 - np.mean(indices[0])))
+                    count += 1
 
     return (averageXY, mask)
