@@ -19,8 +19,8 @@ scoreType = cv.ORB_HARRIS_SCORE
 patchSize = 31
 fastThreshold = 20
 
-# The draw_keypoints function seems to have been removed in the current version of opencv
-# this function is essentially a copy of it
+# The drawKeypoints function seems to have been removed from the current version of opencv
+# this function is essentially a working copy of it
 def draw_keypoints(vis, keypoints):
     for n in keypoints:
         x, y = n.pt

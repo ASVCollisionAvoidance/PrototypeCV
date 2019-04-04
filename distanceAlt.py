@@ -19,7 +19,7 @@ img = cv.imread('Inputs/GOPR0066.jpg',0)
 horizon = 1350
 
 pts1 = np.float32([[1900, horizon], [2000, horizon],[0, 3000], [4000, 3000]])
-pts2 = np.float32([[1800, 0], [2520, 0], [1800, 3000], [2200, 3000]])
+pts2 = np.float32([[1800, 0], [2200, 0], [1800, 3000], [2200, 3000]])
 matrix = cv.getPerspectiveTransform(pts1, pts2)
 img2 = cv.warpPerspective(img, matrix, (4000, 3000))
 
