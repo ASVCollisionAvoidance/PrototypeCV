@@ -1,3 +1,10 @@
+import ansyncio
+import logging
+
+from ..wamp import ApplicationSession, rpc
+from auv_control_pi.utils import Point
+
+import subprocess
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -8,6 +15,7 @@ from kmeans import classifyROI
 from board import removeBoard
 from distance import findDistances
 
+logger = logging.getLogger(__name__)
 
 def getCC(regions, gray):
     """
@@ -54,7 +62,7 @@ def getCC(regions, gray):
     return (retval, labels, mask)
 
 
-def processImage(pic, pitch):
+def processImage(pic):
     """
     Entire obstacle detection algorithm.
 
@@ -66,10 +74,6 @@ def processImage(pic, pitch):
     ----------
     pic: numpy N-dimensional array
         input image as taken by camera
-
-    pitch: float
-        pitch angle of surfboard, this angle impacts the perceived distance
-        to an obstacle
 
     Returns
     -------
@@ -102,32 +106,74 @@ def processImage(pic, pitch):
     # classify the detected ROI as 'Objects to Avoid' vs. other
     if(int(retval) >= 2):
         averageXY, mask = classifyROI(retval, labels, mask, pic)
-        distanceList = findDistances(averageXY, pitch)
+        distanceList = findDistances(averageXY)
     else:
         distanceList = []
 
     return (distanceList, mask)
 
+class CV(ApplicationSession):
 
-for filename in os.listdir('../PrototypeCV/Inputs'):
-    if filename.endswith(".jpg") or filename.endswith(".JPG"):
-        # read image file
-        name = filename.split(".")[0]
-        pic = cv.imread('Inputs/' + filename)
-        print("name: " + name)
-        print("image size: " + str(pic.shape[0]) + " x " + str(pic.shape[1]))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        subprocess.call("../camera-control/setphotomode.sh")
+        self.current_location = None
+        self.obstacle_distances = []
+        self.update_frequency = 10
 
-        # display original image (remove this part when done project)
-        plt.imshow(pic)
-        plt.show()
+    @subscribe('gps.update')
+    def _update_gps(self, data):
+        self.current_location = Point(lat=data.get('lat'), lng=data.get('lng'))
 
-        pitch = 1 # SUSCRIBE TO AHRS.PY from Adrien's code
+    async def update(self):
+        """Publish current state to anyone listening
+        """
+        while True:
+            # send command to camera to take photo
+            subprocess.call("../camera-control/takephoto.sh")
+            # download latest photo off camera and save in ../camera-control/photos/
+            subprocess.call("../camera-control/getlatestphoto.sh")
 
-        distanceList, mask = processImage(pic, pitch)
+            latestphoto=os.listdir("../camera-control/photos/")[-1]
+            pic = cv.imread('../camera-control/photos/' + latestphoto)
 
-        print("\nDistance List:")
-        print(distanceList)
+            distanceList, mask = processImage(pic)
+            self.obstacle_distances = distanceList # overwrites distances w output
 
-        mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
-        plt.imshow(mask_with_image)
-        plt.show()
+            payload = {
+                'current_location': self.current_location,
+                'obstacle_distances': self.obstacle_distances
+            }
+            self.publish('cv.update', payload)
+
+            if distanceList.len() != 0:
+                file = open("../interestphotos.txt", "a")
+                file.write(latestphoto)
+                file.clost()
+
+            subprocess.call("../camera-control/deletelatestphoto.sh")
+
+            await asyncio.sleep(1 / self.update_frequency)
+
+# for filename in os.listdir('../PrototypeCV/Inputs'):
+#     if filename.endswith(".jpg") or filename.endswith(".JPG"):
+#         # read image file
+#         name = filename.split(".")[0]
+#         pic = cv.imread('Inputs/' + filename)
+#         print("name: " + name)
+#         print("image size: " + str(pic.shape[0]) + " x " + str(pic.shape[1]))
+#
+#         # display original image (remove this part when done project)
+#         plt.imshow(pic)
+#         plt.show()
+#
+#         pitch = 1 # SUSCRIBE TO AHRS.PY from Adrien's code
+#
+#         distanceList, mask = processImage(pic, pitch)
+#
+#         print("\nDistance List:")
+#         print(distanceList)
+#
+#         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
+#         plt.imshow(mask_with_image)
+#         plt.show()
