@@ -23,7 +23,7 @@ def findDistances(averageXY, pitch):
     stableRatioX = 1060/46 # (TODO: change to actual number) ratio of pixels:cm (pixels/cm) in horizontal direction
     x = 46 #cm
 
-    stableRatioY = 1680/87 # (TODO: change to actual number) ratio of pixels:cm (pixels/cm) in vertical direction
+    stableRatioY = 650/0.64 # (TODO: change to actual number) ratio of pixels:cm (pixels/cm) in vertical direction
     y = 87 #cm
 
 
