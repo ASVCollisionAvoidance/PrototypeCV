@@ -11,6 +11,10 @@ from matplotlib import pyplot as plt
 import parameters as p
 import transform
 
+#   Uses an inverse perspective mapping to find the boundaries of the regions
+#   relative to the board
+#   Returns a list corresponding to each region
+#   Each entry is a tuple of distances ordered as (xmin xmax ymin ymax)
 
 def findDistances(horizon, regionCount, points):
     
@@ -32,19 +36,22 @@ def findDistances(horizon, regionCount, points):
     maxx = []
     miny = []
     maxy = []
+    # Finds the extremal lines bounding each region
+    # y component is swapped due pixel index starting from the top of the image
     for blob in transformed_points:
         minx.append(np.amin(blob[1]))
         maxx.append(np.amax(blob[1]))
         miny.append(np.amax(blob[0]))
         maxy.append(np.amin(blob[0]))
-        
+    
+    # Find number of pixels that the known distances correspond to
     xref, yref = transformed_edge[0]-transformed_tip[0], transformed_edge[1]-transformed_tip[1]
     
     minxdist = list(map((lambda x: (x-transformed_tip[0])/xref*p.xscale), minx))
     maxxdist = list(map((lambda x: (x-transformed_tip[0])/xref*p.xscale), maxx))
-    minydist = list(map((lambda x: (transformed_tip[1]-x)/yref*p.yscale), miny))
-    maxydist = list(map((lambda x: (transformed_tip[1]-x)/yref*p.yscale), maxy))
-#    return miny, xref, yref, transformed_edge, transformed_tip, minydist
+    minydist = list(map((lambda x: (transformed_edge[1]-x)/yref*p.yscale), miny))
+    maxydist = list(map((lambda x: (transformed_edge[1]-x)/yref*p.yscale), maxy))
+    
     dist = zip(minxdist, maxxdist, minydist, maxydist)
     
     return dist

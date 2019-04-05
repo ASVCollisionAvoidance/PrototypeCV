@@ -5,8 +5,9 @@ Created on Fri Apr  5 11:14:17 2019
 @author: ryley
 """
 
-import numpy as np
-import cv2 as cv
+#   Function that performs the same operation as cv.warpPerspective
+#   Takes an array instead of an img
+#   Used to transform individual points to the inverse perspective space
 
 def transform(points, matrix):
 
