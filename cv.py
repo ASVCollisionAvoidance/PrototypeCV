@@ -116,7 +116,7 @@ class CV(ApplicationSession):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        subprocess.call("../camera-control/setphotomode.sh")
+        subprocess.call("../camera-control/setphotomode.sh " + interface)
         self.current_location = None
         self.obstacle_distances = []
         self.update_frequency = 10
@@ -130,9 +130,9 @@ class CV(ApplicationSession):
         """
         while True:
             # send command to camera to take photo
-            subprocess.call("../camera-control/takephoto.sh")
+            subprocess.call("../camera-control/takephoto.sh " + interface)
             # download latest photo off camera and save in ../camera-control/photos/
-            subprocess.call("../camera-control/getlatestphoto.sh")
+            subprocess.call("../camera-control/getlatestphoto.sh " + interface)
 
             latestphoto=os.listdir("../camera-control/photos/")[-1]
             pic = cv.imread('../camera-control/photos/' + latestphoto)
@@ -151,7 +151,7 @@ class CV(ApplicationSession):
                 file.write(latestphoto)
                 file.clost()
 
-            subprocess.call("../camera-control/deletelatestphoto.sh")
+            subprocess.call("../camera-control/deletelatestphoto.sh " + interface)
 
             await asyncio.sleep(1 / self.update_frequency)
 
