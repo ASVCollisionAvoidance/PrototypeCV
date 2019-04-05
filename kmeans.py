@@ -87,4 +87,4 @@ def classifyROI(retval, labels, mask, pic):
                     averageXY[count] = (int(np.mean(indices[1])), int(1950 - np.mean(indices[0])))
                     count += 1
 
-    return (averageXY, mask)
+    return (averageXY, mask, retval, sample)

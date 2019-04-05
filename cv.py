@@ -9,6 +9,7 @@ import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 import os
+import parameters as p
 from horizon import detect_horizon
 from mser import detect_MSERregions
 from kmeans import classifyROI
@@ -86,7 +87,7 @@ def processImage(pic):
         as an obstacle
     """
     # find horizon
-    horizon = detect_horizon(pic)
+    horizon, midpoint= detect_horizon(pic)
 
     # remove part of picture below/beside board
     noBoard = removeBoard(horizon)
@@ -105,8 +106,8 @@ def processImage(pic):
 
     # classify the detected ROI as 'Objects to Avoid' vs. other
     if(int(retval) >= 2):
-        averageXY, mask = classifyROI(retval, labels, mask, pic)
-        distanceList = findDistances(averageXY)
+        averageXY, mask, retval, sample = classifyROI(retval, labels, mask, pic)
+        distanceList = findDistances(midpoint, retval, sample)
     else:
         distanceList = []
 
