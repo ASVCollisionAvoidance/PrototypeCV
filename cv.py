@@ -14,7 +14,7 @@ from horizon import detect_horizon
 from mser import detect_MSERregions
 from kmeans import classifyROI
 from board import removeBoard
-from distance import findDistances
+from distanceAlt import findDistances
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ def processImage(pic):
     # classify the detected ROI as 'Objects to Avoid' vs. other
     if(int(retval) >= 2):
         averageXY, mask, retval, sample = classifyROI(retval, labels, mask, pic)
-        distanceList = findDistances(midpoint, retval, sample)
+        distanceList = findDistances(midpoint, retval, mask)
     else:
         distanceList = []
 
