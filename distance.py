@@ -1,37 +1,57 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr  3 11:27:46 2019
 
-def findDistances(averageXY, pitch):
-    """
-    Converts a list of pixel coordinates to a list of distances,
-    based on known conversion factors.
+@author: ryley
+"""
 
-    Parameters
-    ----------
-    averageXY: list
-        a list of (x, y) tuples that represent the average coordinates
-        of each detected object
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+import parameters as p
+import transform
 
-    pitch: int
-        pitch angle of the surfboard - a parameter that will influence
-        the perceived distance of objects
+#   Uses an inverse perspective mapping to find the boundaries of the regions
+#   relative to the board
+#   Returns a list corresponding to each region
+#   Each entry is a tuple of distances ordered as (xmin xmax ymin ymax)
 
-    Returns
-    -------
-    distanceList: list
-        a list of (x, y) tuples that represent the average
-        distances in cm of each detected object
-    """
-    stableRatioX = 1060/46 # (TODO: change to actual number) ratio of pixels:cm (pixels/cm) in horizontal direction
-    x = 46 #cm
+def findDistances(horizon, regionCount, points):
+    
+    pts1 = np.float32([[p.tip[0]-50, horizon], [p.tip[0]+50, horizon],[0, 3000], [4000, 3000]])
+    pts2 = np.float32([[1800, 0], [2200, 0], [1800, 3000], [2200, 3000]])
+    matrix = cv.getPerspectiveTransform(pts1, pts2)
 
-    stableRatioY = 650/0.64 # (TODO: change to actual number) ratio of pixels:cm (pixels/cm) in vertical direction
-    y = 87 #cm
+    transformed_mask = cv.warpPerspective(points, matrix, (4000, 3000))
+    transformed_tip = transform.transform(p.tip, matrix)
+    transformed_edge = transform.transform(p.edge, matrix)
+    
+    regionCount, transformed_mask = cv.connectedComponents(transformed_mask)
+    sorted_mask = np.uint8(transformed_mask)
+    transformed_points = []
+    for i in range(1, regionCount):
+        transformed_points.append(np.where(sorted_mask == i))
 
-
-    angleRatio = 1 # (TODO: change to actual number) ratio of pixels/cm/degree for pitch angle
-
-    #finalRatioX = 1
-    finalRatioY = angleRatio * pitch + stableRatioY
-
-    distanceList = [(x[0]/stableRatioX, x[1]/stableRatioY) for x in averageXY]
-
-    return distanceList
+    minx = []
+    maxx = []
+    miny = []
+    maxy = []
+    # Finds the extremal lines bounding each region
+    # y component is swapped due pixel index starting from the top of the image
+    for blob in transformed_points:
+        minx.append(np.amin(blob[1]))
+        maxx.append(np.amax(blob[1]))
+        miny.append(np.amax(blob[0]))
+        maxy.append(np.amin(blob[0]))
+    
+    # Find number of pixels that the known distances correspond to
+    xref, yref = transformed_edge[0]-transformed_tip[0], transformed_edge[1]-transformed_tip[1]
+    
+    minxdist = list(map((lambda x: (x-transformed_tip[0])/xref*p.xscale), minx))
+    maxxdist = list(map((lambda x: (x-transformed_tip[0])/xref*p.xscale), maxx))
+    minydist = list(map((lambda x: (transformed_edge[1]-x)/yref*p.yscale), miny))
+    maxydist = list(map((lambda x: (transformed_edge[1]-x)/yref*p.yscale), maxy))
+    
+    dist = zip(minxdist, maxxdist, minydist, maxydist)
+    
+    return dist

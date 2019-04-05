@@ -14,7 +14,7 @@ from horizon import detect_horizon
 from mser import detect_MSERregions
 from kmeans import classifyROI
 from board import removeBoard
-from distanceAlt import findDistances
+from distance import findDistances
 
 logger = logging.getLogger(__name__)
 
