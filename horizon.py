@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
+import parameters as p
 
 def detect_horizon(pic):
     """
@@ -60,9 +61,10 @@ def detect_horizon(pic):
     p2x = horizon.shape[1]
     p2y = int(m*p2x + b)
     cv.line(horizon,(p1x,p1y), (p2x,p2y), (255,0,0), 15)
+    mid = m*p.tip[0]+b
 
     imCopy = pic.copy()
     vertices = np.array([[(p1x,p1y), (p2x,p2y), (horizon.shape[1],0), (0,0)]], dtype=np.int32)
     cv.fillConvexPoly(imCopy,vertices,(0,0,0))
 
-    return imCopy
+    return imCopy, mid
