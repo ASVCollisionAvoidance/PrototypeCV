@@ -1,25 +1,21 @@
-# Draft Computer Vision Algorithm for ASV project
-* processes a folder of images at a time
-* detects horizon
-* detects objects in water
+# Computer Vision Algorithm for ASV Project
+### Authors:
+Paula Cameron, Amber Donnelly, Ryley Simpson
 
-## Important Steps after cloning repo:
-1. Create two new folders titled 'Inputs' and 'Outputs', respectively.
-2. Add images to be processed into the Inputs folder.
 
-### MSER
-Uses MSER (Maximally Stable Extremal Regions) algorithm to detect Regions of Interest within image.
+### Project Description:
+This project was completed as part of the ENPH 459: Engineering Physics Project I course. It was sponsored by Adrien Emery, an Engineering Physics alum.
 
-#### Important Parameters:
-**minArea**: minimum area of blob to be detected
-* 0.1% of total image area
+This repository contains a computer vision algorithm for the collision avoidance system of an autonomous surface vehicle.
 
-**maxArea**: maximum area of blob to be detected
-* 30% of total image area
 
-**delta**: maximum variation from one blob to the next
-* current set at delta = 12 (needs to be adjusted)
-
-### Horizon Detection
-* uses Canny Edge Detection and Hough Line Transform to find the horizon in each image
-* segments the image based on the horizon line
+### Main Steps:
+1. GoPro control
+  - take picture
+  - download picture from GoPro
+2. Detect and remove pixels above horizon
+3. Remove pixels below tip of surfboard
+4. Use MSER (maximally stable extremal regions) feature detection algorithm to detect regions on interest.
+5. Use k-means clustering to classify detected regions as obstacles or false positives.
+6. Calculate distances from each detected obstacle.
+7. Output a distance for each object as a list of four points which create a bounding box around the object.
