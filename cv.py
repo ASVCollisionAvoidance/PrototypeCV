@@ -103,9 +103,6 @@ def processImage(pic):
     # get the connected components from the MSER regions
     retval, labels, mask = getCC(regions, gray)
 
-    print("\nretval: ")
-    print(retval)
-
     mserRegions = cv.bitwise_and(pic, pic, mask=mask)
 
     # classify the detected ROI as 'Objects to Avoid' vs. other

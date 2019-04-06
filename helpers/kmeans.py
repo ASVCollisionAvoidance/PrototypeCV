@@ -69,8 +69,6 @@ def classifyROI(retval, labels, mask, pic):
 
         averageXY = [(0,0) for _ in range(np.count_nonzero(labels_kmeans))]
 
-        print(labels_kmeans)
-
         count = 0
         for i in range(int(retval)-1):
 
