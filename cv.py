@@ -1,20 +1,24 @@
-import ansyncio
+# TODO
+# import asyncio
 import logging
 
-from ..wamp import ApplicationSession, rpc
-from auv_control_pi.utils import Point
+# TODO
+# move this repo into auv-control-pi and import as required to integrate
+# from ..wamp import ApplicationSession, rpc
+# from auv_control_pi.utils import Point
 
+import time
 import subprocess
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 import os
 import parameters as p
-from horizon import detect_horizon
-from mser import detect_MSERregions
-from kmeans import classifyROI
-from board import removeBoard
-from distance import findDistances
+from helpers/horizon import detect_horizon
+from helpers/mser import detect_MSERregions
+from helpers/kmeans import classifyROI
+from helpers/board import removeBoard
+from helpers/distance import findDistances
 
 logger = logging.getLogger(__name__)
 
@@ -113,68 +117,72 @@ def processImage(pic):
 
     return (distanceList, mask)
 
-class CV(ApplicationSession):
+# TODO
+# redefine this class to match the component convention
+# class CV(ApplicationSession):
+class CV:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        subprocess.call("../camera-control/setphotomode.sh " + interface)
+        os.system("pwd")
+        os.system("./camera/setphotomode.sh local")
         self.current_location = None
         self.obstacle_distances = []
-        self.update_frequency = 10
+        self.update_frequency = 0.5
 
-    @subscribe('gps.update')
-    def _update_gps(self, data):
-        self.current_location = Point(lat=data.get('lat'), lng=data.get('lng'))
+    # TODO
+    # subscribe to gps so that distances can be mapped later
+    # @subscribe('gps.update')
+    # def _update_gps(self, data):
+    #     self.current_location = Point(lat=data.get('lat'), lng=data.get('lng'))
 
-    async def update(self):
-        """Publish current state to anyone listening
-        """
-        while True:
-            # send command to camera to take photo
-            subprocess.call("../camera-control/takephoto.sh " + interface)
-            # download latest photo off camera and save in ../camera-control/photos/
-            subprocess.call("../camera-control/getlatestphoto.sh " + interface)
+    # TODO
+    # redefine this function to match the component convention
+    # async def update(self):
+    #     """Publish current state to anyone listening
+    #     """
+    def cvrun(self):
+        try:
+            while True:
+                # send command to camera to take photo
+                os.system("./camera/takephoto.sh local")
+                # download latest photo off camera and save in /camera/photos/
+                os.system("./camera/getlatestphoto.sh local")
 
-            latestphoto=os.listdir("../camera-control/photos/")[-1]
-            pic = cv.imread('../camera-control/photos/' + latestphoto)
+                latestphoto=os.listdir("camera/photos/")[-1]
+                pic = cv.imread('camera/photos/' + latestphoto)
 
-            distanceList, mask = processImage(pic)
-            self.obstacle_distances = distanceList # overwrites distances w output
+                distanceList, mask = processImage(pic)
+                self.obstacle_distances = distanceList # overwrites distances w output
 
-            payload = {
-                'current_location': self.current_location,
-                'obstacle_distances': self.obstacle_distances
-            }
-            self.publish('cv.update', payload)
+                payload = {
+                    'current_location': self.current_location,
+                    'obstacle_distances': self.obstacle_distances
+                }
 
-            if distanceList.len() != 0:
-                file = open("../interestphotos.txt", "a")
-                file.write(latestphoto)
-                file.clost()
+                # TODO
+                # FIRST trade print statements for self.publish
+                # SECOND incorporate GPS data and map to absolute GPS location
+                print("Obstacle distances: ")
+                print(self.obstacle_distances)
+                # self.publish('cv.update', payload)
 
-            subprocess.call("../camera-control/deletelatestphoto.sh " + interface)
+                # writes the names of photos of interest to interestphotos.txt
+                if len(distanceList) != 0:
+                    file = open("interestphotos.txt", "a")
+                    file.write(latestphoto + "\n")
+                    file.close()
 
-            await asyncio.sleep(1 / self.update_frequency)
+                os.system("./camera/deletelatestphoto.sh local")
 
-# for filename in os.listdir('../PrototypeCV/Inputs'):
-#     if filename.endswith(".jpg") or filename.endswith(".JPG"):
-#         # read image file
-#         name = filename.split(".")[0]
-#         pic = cv.imread('Inputs/' + filename)
-#         print("name: " + name)
-#         print("image size: " + str(pic.shape[0]) + " x " + str(pic.shape[1]))
-#
-#         # display original image (remove this part when done project)
-#         plt.imshow(pic)
-#         plt.show()
-#
-#         pitch = 1 # SUSCRIBE TO AHRS.PY from Adrien's code
-#
-#         distanceList, mask = processImage(pic, pitch)
-#
-#         print("\nDistance List:")
-#         print(distanceList)
-#
-#         mask_with_image = cv.bitwise_and(pic, pic, mask=mask)
-#         plt.imshow(mask_with_image)
-#         plt.show()
+                # TODO
+                # trade time.sleep() for await asyncio.sleep()
+                time.sleep(1 / self.update_frequency)
+                # await asyncio.sleep(1/self.update_frequency)
+
+        except KeyboardInterrupt: # exits when ctrl+c is pressed
+            pass
+
+# runs the while true loop that continuously takes+processes photos
+realtimeprocess = CV()
+realtimeprocess.cvrun()
